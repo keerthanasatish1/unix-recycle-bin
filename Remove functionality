@@ -1,0 +1,133 @@
+# to remove files
+#!/bin/bash
+if [ $# = 0  ];then
+  echo "remove: missing operand"
+  exit;
+fi
+
+
+ if [ ! -d $HOME/deleted ]; then
+#echo "directory already exists"
+#else
+    mkdir -p $HOME/deleted;
+fi;
+
+    if [ -d $HOME/deleted ] && [ ! -e $HOME/.restore.info ] ; then
+        touch $HOME/.restore.info
+    fi
+
+ivrRFunc(){
+    if [ $noOption = true ] ; then
+        RemoveFunc
+    elif [ $interactive = true ] && [ $verbose = true ] ; then
+        if [ -s $file ] ; then
+            read -p "remove: remove regular  file '$file' ? [y/n] " yn
+        else
+            read -p "remove: remove regular empty file '$file' ? [y/n] " yn
+        fi
+        caseSelection
+        echo "removed $file "
+    elif [ $interactive = true ] ; then
+ if [ -s $file ] ; then
+            read -p "remove: remove regular  file '$file' ? [y/n] " yn
+        else
+            read -p "remove: remove regular empty file '$file' ? [y/n] " yn
+        fi
+
+        caseSelection
+    elif [ $verbose = true ] ; then
+        RemoveFunc
+        echo "removed '$file' "
+    fi
+}
+
+main() {
+    for file in $*
+    do
+
+     if [ ! -e "$file" ]; then
+    echo "remove: cannot remove $file: No such file or directory"
+
+    elif [ -d "$file" ]; then
+    echo "remove: cannot remove $file: Is a directory"
+     fi
+
+          #$absolute=$(readlink -f $1)
+        #echo $absolute
+     if [[  $file = "remove"  || $(readlink -f $0) = $(readlink -f $file) ]];
+        then
+     # echo  $(readlink -f $0)
+        #echo $(readlink -f $file)
+     echo  "Attempting to delete remove-operation aborted"
+         exit 1;
+
+      elif [ $file = restore ];then
+   echo  "Attempting to delete remove-operation aborted"
+fi
+        ivrRFunc
+    done
+}
+
+RemoveFunc() {
+    if [ -f $file ] ; then
+        inode=$(ls -i $file | cut -d " " -f1) filename=$file
+       newfilename=$(basename $filename)_$inode deletedfilepath=$(readlink -fn $file)
+        mv $file $HOME/deleted/$newfilename
+        echo $newfilename:$deletedfilepath >> $HOME/.restore.info
+    fi
+}
+
+caseSelection() {
+    case $yn in
+        y) RemoveFunc;;
+        yes) RemoveFunc;;
+        n ) continue;;
+        no) continue;;
+        * ) echo  "invalid option";exit;
+    esac
+}
+
+
+
+noOption=true
+interactive=false
+verbose=false
+dir=false
+
+while getopts ivrR opt
+do
+    case $opt in
+        i)  interactive=true
+            noOption=false
+            ;;
+        v)  verbose=true
+            noOption=false
+            ;;
+        r)  dir=true
+            ;;
+        R)  dir=true
+            ;;
+    esac
+done
+shift $(($OPTIND - 1))
+if [ $dir = true ]; then
+       for file in $*
+       do
+               if [ -d $file ] && [ -e $file ]; then
+                    for x in $(find $file -type f)
+                      do
+                        inode=$(ls -i $x | cut -d " " -f1) filename=$x
+                        newfilename=$(basename $filename)_$inode deletedfilepath=$(readlink -f $x)
+                        mv $x $HOME/deleted/$newfilename
+                        echo $newfilename:$deletedfilepath >> $HOME/.restore.info;
+                         done
+                        rm -r $file
+
+               else
+                       echo " remove: cannot remove $file: No such file or directory"
+               fi
+       done
+else
+
+    main $*
+fi

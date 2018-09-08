@@ -1,0 +1,46 @@
+#To restore files
+#!/bin/bash
+
+
+
+
+function restorefile(){
+
+
+if [[ -e $targetpath ]]; then read -p "The file $delfile already exists in $targetpath Do you want to overwrite?" yn
+         case $yn in
+        [Yy])
+                   mv  ~/deleted/$delfile $targetpath
+                   grep -v "$1" $HOME/.restore.info > $HOME/.tempfolder
+                   cat  $HOME/.tempfolder > $HOME/.restore.info;;
+        [Nn] ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+else
+                   mv  ~/deleted/$delfile $targetpath
+                   grep -v "$1" $HOME/.restore.info > $HOME/.tempfolder
+                   cat  $HOME/.tempfolder > $HOME/.restore.info
+                   echo "restore successfull"
+fi
+
+}
+if [ $# = 0  ];then
+  echo "remove: missing operand"
+  exit;
+fi
+fileexist=$(grep "$1" ~/.restore.info |cut -d":" -f2)
+echo $fileexist
+delfile=$(grep "$1" ~/.restore.info |cut -d":" -f1)
+targetpath=$(grep "$1" ~/.restore.info | cut -d":" -f2)
+if [ ! $fileexist ] ; then
+    echo "remove: cannot remove $delfile: No such file or directory"
+exit;
+fi
+
+    originalDir=$(dirname $targetpath)
+    if [ ! -d $originalDir ] ; then
+                mkdir -p $originalDir
+                restorefile
+    else
+        restorefile
+        fi
